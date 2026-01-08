@@ -1,9 +1,10 @@
 import random
 
-#Generate a random source ip
+#Generates a random source ip
 def generate_random_ip():
     return f"192.168.1.{random.randint(0, 20)}"
 
+#Takes an ip address and dictionary of rules to determine action
 def check_firewall_rules(ip, rules):
     for rule_ip, action in rules.items():
         if ip == rule_ip:
@@ -11,6 +12,7 @@ def check_firewall_rules(ip, rules):
     return "allow"
 
 def main():
+    #Predetermined firewall rules
     firewall_rules = {
         "192.168.1.1" : "block",
         "192.168.1.4" : "block",
@@ -26,6 +28,7 @@ def main():
         random_number = random.randint(0, 9999) #Servers as a unique identifier for each action taken against the ips
         print(f"IP: {ip_address}, Action: {action}, Random: {random_number}")
 
+#Main guard
 if __name__ == "__main__":
     main()
 
