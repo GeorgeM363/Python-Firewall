@@ -32,10 +32,22 @@ def packet_callback(packet):
         packet_count.clear() # Clears packet count
         start_time[0] = current_time #Restarts time
 
+#Checks effective user ID, on Linux and Unix systems 0 is the root user
+def is_admin():
+    if os.name == "nt":  # Windows
+        try:
+            import ctypes
+            return ctypes.windll.shell32.IsUserAnAdmin()
+        except:
+            return False
+    else:  # macOS / Linux
+        return os.geteuid() == 0
+    
+
 # Root access is required whena script performs privileged systems operations that regular users are not allowed to do
 # Needed in this case for network-level operations
 if __name__ == "__main__": #Ensures code only runs when the file is executed directly
-    if os.geteuid() != 0: #Checks effective user ID, on Linux and Unix systems 0 is the root user
+    if not is_admin(): 
         print("This script requires root privileges.")
         sys.exit(1)
 

@@ -120,11 +120,9 @@ if __name__ == "__main__":
     blocked_ips = set()
 
     print("Monitoring network traffic...")
-    sniff(filter="ip", prn=packet_callback) # Sniff function from Scapy, filters only ip packets and runs packet_callback for each captured packet
-
-
-    # Things to add:
-    # Alerting: Notify through email or txt, helps to learn APIs
+    sniff(filter="ip", prn=packet_callback) 
+    
+    # Sniff function from Scapy, filters only ip packets and runs packet_callback for each captured packet
 
     # Web dashboard: Visualize data by displaying packet rates, blocked IPs, malware signatures, and geolocational data, use Flash + Django and chartJS or djJS
 
