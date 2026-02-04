@@ -15,7 +15,7 @@ def read_ip_file(filename):
 
 # Check for Nimda worm signature
 def is_nimda_worm(packet):
-    if packet.haslayer(TCP) and packet[TCP].dport == 80:
+    if packet.haslayer(TCP) and packet[TCP].dport == 80: 
         payload = packet[TCP].payload
         return "GET /scripts/root.exe" in str(payload)
     return False
@@ -33,7 +33,7 @@ def log_event(message):
 def packet_callback(packet):
     src_ip = packet[IP].src
 
-      # Check if IP is in the whitelist
+    # Check if IP is in the whitelist
     if src_ip in whitelist_ips:
         return
 
@@ -43,7 +43,7 @@ def packet_callback(packet):
         log_event(f"Blocking blacklisted IP: {src_ip}")
         return
     
-      # Check for Nimda worm signature
+    # Check for Nimda worm signature
     if is_nimda_worm(packet):
         print(f"Blocking Nimda source IP: {src_ip}")
         os.system(f"iptables -A INPUT -s {src_ip} -j DROP")
