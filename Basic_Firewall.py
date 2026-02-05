@@ -4,20 +4,18 @@ import time
 import subprocess
 import ipaddress
 import Email_API
+import Code_Red_Dummy
 from collections import defaultdict
-from scapy.all import sniff, IP, TCP
+from scapy.all import sniff, IP, TCP, Raw, UDP
 
 
 THRESHOLD = 40
 print(f"THRESHOLD: {THRESHOLD}")
 
 # Validates IP address
-"""
-Rejects if:
-* Invalid IP
-* Wrong IP version (IPv6 instead of IPv4)
-* Multicast / loopback / reserved (unless intentional)
-"""
+
+# Rejects invalid IPs that are not IPv4 or IPv6
+# Prevents injection attacks from smuggled instructions
 def validate_ip(ip):
     try:
         return ipaddress.ip_address(ip)
@@ -31,17 +29,42 @@ def read_ip_file(filename):
     return set(ips)
 
 # Check for Nimda worm signature
-def is_nimda_worm(packet):
+def is_Nimda_worm(packet):
     if packet.haslayer(TCP) and packet[TCP].dport == 80: #Checks the port for HTTP
         payload = packet[TCP].payload
         return "GET /scripts/root.exe" in str(payload)
     return False
 
+# Checks for Code Red Worm
+def is_http_worm(packet):
+    if packet.haslayer(TCP) and packet[TCP].dport == 80:
+        if packet.haslayer(Raw): # Needs to extract raw layer bytes to check syntax
+            payload = packet[Raw].load
+            return b".ida?" in payload and payload.count(b"X") > 100
+    return False
+
+# Checks for SQL Slammer
+def IS_SQL_SLAMMER(packet):
+    if packet.haslayer(UDP) and packet[UDP].dport == 1434:
+        if packet.haslayer(Raw): # Needs to extract raw layer bytes to check syntax
+            payload = packet[Raw].load
+            return 300 < len(payload) < 500 # Slammer payloads usually around 376 bytes
+    return False
+
+def is_Mirai(packet):
+    if packet.haslayer(TCP) and packet[TCP].dport in (23, 2323):
+        return
+
+#def is_possible_backdoor():
+
+
+#def is_possible_malware():
+
 # Log events to a file
 def log_event(message):
-    log_folder = "logs" # Folder where log files will be stored
-    os.makedirs(log_folder, exist_ok=True) # Makes a log folder if it doesn't exist
-    timestamp = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime()) 
+    log_folder = "logs"
+    os.makedirs(log_folder, exist_ok=True)
+    timestamp = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
     log_file = os.path.join(log_folder, f"log_{timestamp}.txt")
     
     with open(log_file, "a") as file:
@@ -81,7 +104,7 @@ def packet_callback(packet):
         return
     
     # Check for Nimda worm signature
-    if is_nimda_worm(packet):
+    if is_Nimda_worm(packet):
         print(f"Blocking Nimda source IP: {src_ip}")
         block_ip(src_ip) # Drops IP packets associated with Nimda worm
         log_event(f"Blocking Nimda source IP: {src_ip}") # Writes to log file
@@ -107,7 +130,9 @@ def packet_callback(packet):
 
 # Main guard
 if __name__ == "__main__":
-    if os.geteuid() != 0: # Checks if script has root privileges
+    pkt = Code_Red_Dummy.generate_dummy_codered_packet()
+    print(is_HTTP_worm(pkt))
+    """if os.geteuid() != 0: # Checks if script has root privileges
         print("This script requires root privileges.")
         sys.exit(1)
 
@@ -120,7 +145,9 @@ if __name__ == "__main__":
     blocked_ips = set()
 
     print("Monitoring network traffic...")
-    sniff(filter="ip", prn=packet_callback) 
+    sniff(filter="ip", prn=packet_callback)"""
+
+
     
     # Sniff function from Scapy, filters only ip packets and runs packet_callback for each captured packet
 
